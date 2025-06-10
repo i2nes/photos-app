@@ -133,8 +133,8 @@ class Command(BaseCommand):
             is_photo=photo_info.isphoto,
             is_movie=photo_info.ismovie,
             is_cloud_photo=getattr(photo_info, 'iscloudphoto', False),
-            has_adjustments=photo_info.hasadjustments,
-            is_missing=photo_info.ismissing,
+            has_adjustments=getattr(photo_info, 'hasadjustments', False),
+            is_missing=getattr(photo_info, 'ismissing', False),
 
             # Dates
             date=self._make_aware(photo_info.date),
@@ -152,15 +152,15 @@ class Command(BaseCommand):
 
             # Camera & Technical
             uti=photo_info.uti or '',
-            live_photo=photo_info.live_photo,
+            live_photo=getattr(photo_info, 'live_photo', False),
             is_burst=getattr(photo_info, 'isburst', False),
             is_hdr=getattr(photo_info, 'ishdr', False),
             is_portrait=getattr(photo_info, 'isportrait', False),
-            is_screenshot=photo_info.isscreenshot,
-            is_slow_mo=photo_info.isslow_mo,
-            is_selfie=photo_info.isselfie,
-            is_panorama=photo_info.ispanorama,
-            has_raw=photo_info.has_raw,
+            is_screenshot=getattr(photo_info, 'isscreenshot', False),
+            is_slow_mo=getattr(photo_info, 'isslow_mo', False),
+            is_selfie=getattr(photo_info, 'isselfie', False),
+            is_panorama=getattr(photo_info, 'ispanorama', False),
+            has_raw=getattr(photo_info, 'has_raw', False),
 
             # Image properties
             orientation=photo_info.orientation,
@@ -171,15 +171,15 @@ class Command(BaseCommand):
             # EXIF
             camera_make=photo_info.camera_make or '',
             camera_model=photo_info.camera_model or '',
-            fstop=photo_info.fstop,
-            aperture=photo_info.aperture,
-            iso=photo_info.iso,
-            focal_length=photo_info.focal_length,
-            exposure_time=photo_info.exposure_time,
+            fstop=getattr(photo_info, 'fstop', None),
+            aperture=getattr(photo_info, 'aperture', None),
+            iso=getattr(photo_info, 'iso', None),
+            focal_length=getattr(photo_info, 'focal_length', None),
+            exposure_time=getattr(photo_info, 'exposure_time', None),
 
             # Timezone
             timezone_name=photo_info.timezone_name or '',
-            timezone_offset=photo_info.timezone_offset,
+            timezone_offset=getattr(photo_info, 'timezone_offset', None),
 
             # Apple Photos categorization
             favorite=photo_info.favorite,
@@ -188,46 +188,54 @@ class Command(BaseCommand):
             shared=photo_info.shared,
 
             # File size
-            original_file_size=photo_info.original_file_size,
+            original_file_size=getattr(photo_info, 'original_file_size', None),
         )
 
         # Handle optional fields that might not exist
-        if hasattr(photo_info, 'live_photo_video_uuid'):
-            photo.live_photo_video_uuid = photo_info.live_photo_video_uuid or ''
-        if hasattr(photo_info, 'live_photo_video_path'):
-            photo.live_photo_video_path = photo_info.live_photo_video_path or ''
-        if hasattr(photo_info, 'burst_uuid'):
-            photo.burst_uuid = photo_info.burst_uuid or ''
-        if hasattr(photo_info, 'raw_path'):
-            photo.raw_path = photo_info.raw_path or ''
-
+        photo.live_photo_video_uuid = getattr(photo_info, 'live_photo_video_uuid', '') or ''
+        photo.live_photo_video_path = getattr(photo_info, 'live_photo_video_path', '') or ''
+        photo.burst_uuid = getattr(photo_info, 'burst_uuid', '') or ''
+        photo.raw_path = getattr(photo_info, 'raw_path', '') or ''
+        
         # Handle place information
         if photo_info.place:
             photo.place_name = photo_info.place.name or ''
             photo.place_country_code = photo_info.place.country_code or ''
             photo.place_address = photo_info.place.address_str or ''
-            photo.place_is_home = photo_info.place.ishome
+            photo.place_is_home = getattr(photo_info.place, 'ishome', False)
 
         photo.save()
         return photo
 
     def _update_photo(self, photo, photo_info):
         """Update an existing Photo object"""
-        # Update all fields
+        # Update all fields to match create logic
         photo.original_filename = photo_info.original_filename or ''
         photo.filename = photo_info.filename or ''
         photo.path = photo_info.path or ''
         photo.path_edited = photo_info.path_edited or ''
+        photo.title = photo_info.title or ''
+        photo.description = photo_info.description or ''
 
         # Update flags
         photo.is_photo = photo_info.isphoto
         photo.is_movie = photo_info.ismovie
         photo.is_cloud_photo = getattr(photo_info, 'iscloudphoto', False)
-        photo.has_adjustments = photo_info.hasadjustments
-        photo.is_missing = photo_info.ismissing
+        photo.has_adjustments = getattr(photo_info, 'hasadjustments', False)
+        photo.is_missing = getattr(photo_info, 'ismissing', False)
+        photo.live_photo = getattr(photo_info, 'live_photo', False)
         photo.is_burst = getattr(photo_info, 'isburst', False)
-        photo.is_portrait=getattr(photo_info, 'isportrait', False)
-
+        photo.is_hdr = getattr(photo_info, 'ishdr', False)
+        photo.is_portrait = getattr(photo_info, 'isportrait', False)
+        photo.is_screenshot = getattr(photo_info, 'isscreenshot', False)
+        photo.is_slow_mo = getattr(photo_info, 'isslow_mo', False)
+        photo.is_selfie = getattr(photo_info, 'isselfie', False)
+        photo.is_panorama = getattr(photo_info, 'ispanorama', False)
+        photo.has_raw = getattr(photo_info, 'has_raw', False)
+        photo.favorite = photo_info.favorite
+        photo.hidden = photo_info.hidden
+        photo.in_trash = photo_info.in_trash
+        photo.shared = photo_info.shared
 
         # Update dates
         photo.date = self._make_aware(photo_info.date)
@@ -235,12 +243,42 @@ class Command(BaseCommand):
         photo.date_added = self._make_aware(photo_info.date_added)
         photo.exif_datetime = self._make_aware(getattr(photo_info, 'exif_datetime', None))
 
-        # Update metadata
-        photo.title = photo_info.title or ''
-        photo.description = photo_info.description or ''
-
-        # (You could add more fields here to update them as well, 
-        # similar to the _create_photo method)
+        # Update location
+        photo.latitude = photo_info.latitude
+        photo.longitude = photo_info.longitude
+        if photo_info.place:
+            photo.place_name = photo_info.place.name or ''
+            photo.place_country_code = photo_info.place.country_code or ''
+            photo.place_address = photo_info.place.address_str or ''
+            photo.place_is_home = getattr(photo_info.place, 'ishome', False)
+        else:
+            photo.place_name = ''
+            photo.place_country_code = ''
+            photo.place_address = ''
+            photo.place_is_home = False
+            
+        # Update other fields
+        photo.uti = photo_info.uti or ''
+        photo.orientation = photo_info.orientation
+        photo.height = photo_info.height
+        photo.width = photo_info.width
+        photo.duration = photo_info.duration
+        photo.camera_make = photo_info.camera_make or ''
+        photo.camera_model = photo_info.camera_model or ''
+        photo.fstop = getattr(photo_info, 'fstop', None)
+        photo.aperture = getattr(photo_info, 'aperture', None)
+        photo.iso = getattr(photo_info, 'iso', None)
+        photo.focal_length = getattr(photo_info, 'focal_length', None)
+        photo.exposure_time = getattr(photo_info, 'exposure_time', None)
+        photo.timezone_name = photo_info.timezone_name or ''
+        photo.timezone_offset = getattr(photo_info, 'timezone_offset', None)
+        photo.original_file_size = getattr(photo_info, 'original_file_size', None)
+        
+        # Update optional UUIDs/Paths
+        photo.live_photo_video_uuid = getattr(photo_info, 'live_photo_video_uuid', '') or ''
+        photo.live_photo_video_path = getattr(photo_info, 'live_photo_video_path', '') or ''
+        photo.burst_uuid = getattr(photo_info, 'burst_uuid', '') or ''
+        photo.raw_path = getattr(photo_info, 'raw_path', '') or ''
 
         photo.save()
 
