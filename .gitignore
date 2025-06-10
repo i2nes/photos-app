@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pdb
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+
+# Virtual Environments
+.env
+.venv/
+env/
+venv/
+ENV/
+
+# Django
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+*.pot
+*.mo
+*.log
+local_settings.py
+*.pydevproject
+*.migrations/
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# macOS Finder settings
+.Icon?
+.Spotlight-V100
+.Trashes
+
+# macOS Volume settings
+.VolumeIcon.icns
+.fseventsd
+.TemporaryItems
+.com.apple.timemachine.donotpresent
+.com.apple.diskimages.recent.plist
+
+# Other
+.idea/
+context_files.txt
+generate_context_file.py
