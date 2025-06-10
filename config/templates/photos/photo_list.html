@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="col-span-1 bg-white p-4 rounded-lg shadow">
+        <h2 class="text-xl font-bold mb-4">Filters</h2>
+        <form method="get" action="{% url 'photos:photo_list' %}">
+            <input type="text" name="search" placeholder="Search..." value="{{ request.GET.search }}" class="w-full p-2 border rounded mb-4">
+            
+            <h3 class="font-semibold mb-2">Media Type</h3>
+            <label><input type="checkbox" name="favorites" value="true" {% if request.GET.favorites %}checked{% endif %}> Favorites</label><br>
+            <label><input type="checkbox" name="videos" value="true" {% if request.GET.videos %}checked{% endif %}> Videos Only</label><br>
+            <label><input type="checkbox" name="photos" value="true" {% if request.GET.photos %}checked{% endif %}> Images Only</label><br>
+
+            <h3 class="font-semibold mt-4 mb-2">Albums</h3>
+            <select name="album" class="w-full p-2 border rounded">
+                <option value="">All Albums</option>
+                {% for album in albums %}
+                <option value="{{ album.id }}" {% if request.GET.album == album.id|stringformat:"s" %}selected{% endif %}>{{ album.name }} ({{ album.photo_count }})</option>
+                {% endfor %}
+            </select>
+            
+            <button type="submit" class="w-full bg-blue-500 text-white p-2 mt-4 rounded hover:bg-blue-600">Apply Filters</button>
+            <a href="{% url 'photos:photo_list' %}" class="block text-center mt-2 text-gray-500 hover:underline">Clear Filters</a>
+        </form>
+    </div>
+
+    <div class="col-span-3">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {% for photo in photos %}
+            <a href="{% url 'photos:photo_detail' photo.pk %}">
+                <img src="{% url 'photos:photo_thumbnail' photo.pk %}" alt="{{ photo.filename }}" class="w-full h-48 object-cover rounded-lg shadow hover:shadow-xl transition-shadow duration-200">
+            </a>
+            {% empty %}
+            <p>No photos found.</p>
+            {% endfor %}
+        </div>
+
+        <div class="mt-8">
+            {% if is_paginated %}
+                <span class="text-gray-600">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="text-blue-500 hover:underline">Previous</a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="text-blue-500 hover:underline">Next</a>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
